@@ -99,9 +99,23 @@ checkDependencies() {
   fi
 }
 
+getLastDeltaScriptNumber() {
+  LAST_SCRIPT_APPLIED=`$SQL_COMMAND_LINE $DATABASE_FILE "SELECT change_number FROM changelog ORDER BY change_number DESC limit 1;"` 
+
+  if [ -z $LAST_SCRIPT_APPLIED ]; then
+    LAST_SCRIPT_APPLIED=0
+  fi
+
+  return $LAST_SCRIPT_APPLIED
+}
+
 validateArgumentsAndInit "$#" "$1" "$2" "$3"
 
 checkDependencies
+
+cleanupTempFiles
+
+echo "Applying delta scripts in $2"
 
 # check that the database is there
 if [ ! -e "$DATABASE_FILE" ]; then
@@ -128,9 +142,9 @@ fi
 
 # enumerate and order the delta scripts.
 find $DELTA_DIR > "$DELTA_DIR_FILES"
-sed -n 's/\(^.*\/\([0-9]\)[^0-9].*\.sql$\)/\2 \1/p' $DELTA_DIR_FILES > $UNORDEREDFILES_FILE
+sed -n 's/\(^.*\/\([0-9]*\).*\.sql$\)/\2 \1/p' $DELTA_DIR_FILES > $UNORDEREDFILES_FILE
 
-cat $UNORDEREDFILES_FILE | sort > $ORDEREDFILES_FILE
+cat $UNORDEREDFILES_FILE | sort -n > $ORDEREDFILES_FILE
 
 # check that there are no duplicate numbered scripts...
 awk '{print $1}' ordered.tmp.txt | uniq -d | head -n 1 > $DUPLICATE_DETECTION_FILE
@@ -143,14 +157,8 @@ if [ -s $DUPLICATE_DETECTION_FILE ]; then
   exit $ERROR_DUPLICATE_SCRIPT_NUMBER
 fi
 
-#get the last deltascript that was applied.
-LAST_SCRIPT_APPLIED=`$SQL_COMMAND_LINE $DATABASE_FILE "SELECT change_number FROM changelog ORDER BY change_number DESC limit 1;"` 
-
-if [ -z $LAST_SCRIPT_APPLIED ]; then
-  LAST_SCRIPT_APPLIED=0
-fi
-
-echo "The last script applied was number: $LAST_SCRIPT_APPLIED"
+getLastDeltaScriptNumber
+echo "Before applying deltas, the last script applied was number: $?"
 
 #build the aggregate delta script with support for transactions
 echo '.bail on' > aggregate_deltascript_file.sql 
@@ -176,6 +184,9 @@ then
   cleanupTempFiles
   exit $ERROR_IN_SQL_QUERY
 fi
+
+getLastDeltaScriptNumber
+echo "After applying deltas, the last script applied was number: $?"
 
 #clean up
 cleanupTempFiles
