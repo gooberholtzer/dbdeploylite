@@ -9,47 +9,13 @@ QUERY_ERRORS_FILE="sql.query.error.tmp.txt"
 DELTA_DIR_FILES="files_in_delta_dir.tmp.txt"
 DUPLICATE_DETECTION_FILE="dups.tmp.txt"
 
-#when on will echo the sql executed.
-VERBOSE="off"
-
-# Error definitions
-SUCCESS=0
-ERROR_CHANGE_LOG_TABLE_MISSING=1
-ERROR_NO_DELTAS_FOUND=2
-ERROR_DATABASE_NOT_FOUND=3
-ERROR_DUPLICATE_SCRIPT_NUMBER=4
-ERROR_IN_SQL_QUERY=5
+source ./common.sh
 
 files="[1-9]*.sql"
 regex="([0-9]+).*"
 
 printSyntax() {
   echo 'dbeploylite [-v] <delta directory> <path to database file>';
-}
-
-validateArgumentsAndInit() {
-  
-  if [ "$1" -eq "2" ] 
-  then
-    DATABASE_FILE=$2
-    DELTA_DIR=$3
-    return 0
-  fi
-
-  if [ "$1" -eq "3" ] 
-  then
-    if [ "$2" != "-v" ]; then
-      printSyntax
-      exit -1
-    fi
-    VERBOSE="on" 
-    DATABASE_FILE=$3
-    DELTA_DIR=$4
-    return 0
-  fi
-
-  printSyntax
-  exit -1
 }
 
 cleanupTempFiles() {
