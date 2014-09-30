@@ -11,12 +11,12 @@ When the dbdeploylite.sh utility is run, it looks in a changelog table of the ta
 ## The changelog Table
 For a database to be managed by dbdeploylite it must include the changelog table. This table can be added to a database using the script that is also packaged with the project.  Add the table as follows:
 
-`sqlite3 yourdatabase << create_changelog_table.sql`
+`sqlite3 yourdatabase < create_changelog_table.sql`
 
 ## To Run dbdeploylite
 To run dbdeploylite use the following syntax:
 
-```./dbdeploylite <<database file>> <<directory with scripts>>```
+```./dbdeploylite <database file> <directory with scripts>```
 
 ## Try the Unit Tests First
 There are simple unit tests included in the repo.  After cloning the project, just run ./testrunner.sh to confirm that all the tests pass.
